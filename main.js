@@ -111,7 +111,7 @@ function init() {
   // const gui = new GUI();
   // gui.add( gridHelper, 'visible' );r
 
-  const gui = new GUI({autoPlace: false, width: 300 });
+  const gui = new GUI();
 
   const params = {
     exposure: 1,
