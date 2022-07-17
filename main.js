@@ -1,18 +1,11 @@
 import "./style.css";
-// import * as THREE from "three";
-// import { OrbitControls, MapControls} from "https://cdn.skypack.dev/three-stdlib@2.8.5/controls/OrbitControls"; //usefull
-// import { MapControls } from 'three-stdlib/controls/OrbitControls' //nicht gedownloaded die beispiele
-// //unused packages
 
-// import * as THREE from 'https://unpkg.com/three@0.126.1/build/three.module.js';
-// import { MapControls } from 'https://unpkg.com/three@0.126.1/examples/jsm/controls/OrbitControls.js';
-
-//alternativ
 import * as THREE from "https://cdn.skypack.dev/three@0.137";
 import { MapControls } from "https://cdn.skypack.dev/three-stdlib@2.8.5/controls/OrbitControls";
 
 // // import { RGBELoader } from "https://cdn.skypack.dev/three-stdlib@2.8.5/loaders/RGBELoader";
 // // import { Int8Attribute } from "three";
+
 import { GLTFLoader } from "https://cdn.skypack.dev/three-stdlib@2.8.5/loaders/GLTFLoader";
 import { GUI } from "https://cdn.skypack.dev/dat.gui";
 
@@ -20,10 +13,12 @@ import { EffectComposer } from "https://cdn.skypack.dev/three-stdlib@2.8.5/postp
 import { RenderPass } from "https://cdn.skypack.dev/three-stdlib@2.8.5/postprocessing/RenderPass";
 import { UnrealBloomPass } from "https://cdn.skypack.dev/three-stdlib@2.8.5/postprocessing/UnrealBloomPass";
 
+import { TDSLoader } from "https://cdn.skypack.dev/three-stdlib@2.8.5/loaders/TDSLoader";
+import { FBXLoader } from "https://cdn.skypack.dev/three-stdlib@2.8.5/loaders/FBXLoader";
+
 let renderer, scene, camera, controls;
 
 init();
-// animate();
 
 // Init
 function init() {
@@ -37,9 +32,11 @@ function init() {
     1,
     5000
   );
-  camera.position.set(800, 200, 0);
+  camera.position.set(-800, 400, 0);
+  // camera.zoom = 5;
   // camera.position.setZ(30);
   // camera.position.set(1000, 600, 0);
+  // camera.position.y = MATH.sin(90) * 500;
 
   // Renderer
   renderer = new THREE.WebGL1Renderer({
@@ -90,7 +87,7 @@ function init() {
   controls.listenToKeyEvents(window);
 
   // Light
-  const pointLight = new THREE.PointLight(0xfffdee, 800, 3000);
+  const pointLight = new THREE.PointLight(0xfffdee, 800, 3000, 1);
   pointLight.position.set(0, 0, 0);
   pointLight.casTShadow = true;
   scene.add(pointLight);
@@ -105,8 +102,6 @@ function init() {
     bloomComposer.setSize(window.innerWidth, window.innerHeight);
   });
 
-
-
   //GUI
   // const gui = new GUI();
   // gui.add( gridHelper, 'visible' );r
@@ -115,9 +110,9 @@ function init() {
 
   const params = {
     exposure: 1,
-    bloomStrength: 2.1,
+    bloomStrength: 2.5,
     bloomThreshold: 0.95,
-    bloomRadius: 0.1,
+    bloomRadius: 0.5,
     rotationSpeed: 1,
     orbitSpeed: 1,
   };
@@ -157,9 +152,7 @@ function init() {
       window.params.orbitSpeed = Number(value);
     });
 
-
   //Add Planets
-
 
   ///Add sun as post-processed object (bloom effects9)
   const renderScene = new RenderPass(scene, camera);
@@ -200,6 +193,9 @@ function init() {
   const promiseMoon = addMoon();
   const promiseSaturn = addSaturn();
   const promiseSaturnRing = addSaturnRing();
+  const promiseISS = addISS();
+  const promiseUranus = addUranus();
+  const promiseNeptune = addNeptune();
 
   aPlanets.push(promiseSun);
   aPlanets.push(promiseMars);
@@ -208,21 +204,47 @@ function init() {
   aPlanets.push(promiseMoon);
   aPlanets.push(promiseSaturn);
   aPlanets.push(promiseSaturnRing);
+  aPlanets.push(promiseISS);
+  aPlanets.push(promiseUranus);
+  aPlanets.push(promiseNeptune);
 
   Promise.all(aPlanets).then((aResponse) => {
     // window.planets["sun"] = aResponse[0];
     window.planets["mars"] = aResponse[1];
     window.planets["jupiter"] = aResponse[2];
 
-    window.planets["earth"] = aResponse[3];
-    window.planets["earthGroup"] = addEarthPlaceholder();
-    window.planets.earthGroup.add(aResponse[4]);
+    // window.planets["earth"] = aResponse[3];
+    // window.planets["earthGroup"] = addEarthPlaceholder();
+    // window.planets.earthGroup.add(aResponse[4]); //moon
+    // window.planets.earth.add(addEarthClouds());
 
-    window.planets.earth.add(addEarthClouds());
+    // window.planets["earthGroup"] = new THREE.Group();
+    // window.planets.earthGroup.getObjectByName("earthPlaceholderMain").add(aResponse[3]);
+    // window.planets.earthGroup.push(  addEarthPlaceholder("Earth")  );
+    // window.planets.earthGroup.getObjectByName("earthPlaceholderEarth").add(aResponse[3]);
+
+    window.planets["earthGroup"] = addEarthPlaceholder("Center");
+    window.planets.earthGroup.add(aResponse[3]); //earth
+    window.planets.earthGroup.add(addEarthPlaceholder("Moon")); //Moon
+    window.planets.earthGroup
+      .getObjectByName("earthPlaceholderMoon")
+      .add(aResponse[4]);
+    window.planets.earthGroup.add(addEarthClouds()); //earthClouds
+
+    window.planets.earthGroup.add(addEarthPlaceholder("ISS")); //ISS
+    window.planets.earthGroup
+      .getObjectByName("earthPlaceholderISS")
+      .add(aResponse[7]);
+    window.planets.earthGroup.getObjectByName(
+      "earthPlaceholderISS"
+    ).rotation.x = Math.PI;
 
     window.planets["saturn"] = aResponse[5];
     window.planets["saturnRingGroup"] = addSaturnPlaceholder();
-    window.planets.saturnRingGroup.add(aResponse[6]);
+    window.planets.saturnRingGroup.add(aResponse[6]); //saturnRing
+
+    window.planets["uranus"] = aResponse[8];
+    window.planets["neptune"] = aResponse[9];
 
     //sun einbauen
     // scene.add(window.planets.sun);
@@ -231,10 +253,11 @@ function init() {
 
     scene.add(window.planets.mars);
     scene.add(window.planets.jupiter);
-    scene.add(window.planets.earth);
     scene.add(window.planets.earthGroup);
     scene.add(window.planets.saturn);
     scene.add(window.planets.saturnRingGroup);
+    scene.add(window.planets.uranus);
+    scene.add(window.planets.neptune);
 
     //Zusatz nicht asynchron
     // window.planets.earthGroup["earthClouds"] = addEarthClouds();
@@ -278,12 +301,24 @@ function animate() {
   window.planets.mars.rotation.y += 0.001 * window.params.rotationSpeed;
   // window.planets.sun.rotation.y += 0.001;
   window.planets.jupiter.rotation.y += 0.001 * window.params.rotationSpeed;
-  window.planets.earthGroup.rotation.y += 0.001 * window.params.rotationSpeed;
-  window.planets.earth.rotation.y += 0.002 * window.params.rotationSpeed;
-  window.planets.saturn.rotation.y += 0.002 * window.params.rotationSpeed;
-  // window.planets.saturnGroup.getObjectByName("saturn").rotation.y += 0.0005; //moon is rotation locked
-  // window.planets.earthGroup.getObjectByName("earthClouds").rotation.y += 0.0005; //moon is rotation locked
+  // window.planets.earthGroup.rotation.y += 0.001 * window.params.rotationSpeed;
+  // window.planets.earth.rotation.y += 0.002 * window.params.rotationSpeed;
 
+  //EarthGroup Rotation
+  window.planets.earthGroup.getObjectByName("earth").rotation.y +=
+    0.002 * window.params.rotationSpeed;
+  window.planets.earthGroup.getObjectByName(
+    "earthPlaceholderMoon"
+  ).rotation.y += 0.0015 * window.params.rotationSpeed;
+  window.planets.earthGroup.getObjectByName("earthClouds").rotation.y +=
+    0.0015 * window.params.rotationSpeed;
+  //  window.planets.earthGroup.getObjectByName("earthPlaceholderISS").rotation.x += 0.0025 * window.params.rotationSpeed;
+  window.planets.earthGroup.getObjectByName("earthPlaceholderISS").rotation.x +=
+    0.003 * window.params.rotationSpeed;
+
+  window.planets.saturn.rotation.y += 0.002 * window.params.rotationSpeed;
+  window.planets.uranus.rotation.z += 0.002 * window.params.rotationSpeed;
+  window.planets.neptune.rotation.y += 0.002 * window.params.rotationSpeed;
   //Torus /Schweif
   // window.torusEarth.rotation.z = 0.1 * t + Math.PI / 2; //earth speed als konstante anlegen
   // window.torusMars.rotation.z = 0.05 * t;
@@ -296,10 +331,10 @@ function animate() {
   window.planets.mars.position.z =
     600 * Math.sin(0.05 * t * window.params.orbitSpeed) + 0;
 
-  window.planets.earth.position.x =
-    400 * Math.cos(0.1 * t * window.params.orbitSpeed + Math.PI / 2) + 0;
-  window.planets.earth.position.z =
-    400 * Math.sin(0.1 * t * window.params.orbitSpeed + Math.PI / 2) + 0;
+  // window.planets.earth.position.x =
+  //   400 * Math.cos(0.1 * t * window.params.orbitSpeed + Math.PI / 2) + 0;
+  // window.planets.earth.position.z =
+  //   400 * Math.sin(0.1 * t * window.params.orbitSpeed + Math.PI / 2) + 0;
   window.planets.earthGroup.position.x =
     400 * Math.cos(0.1 * t * window.params.orbitSpeed + Math.PI / 2) + 0;
   window.planets.earthGroup.position.z =
@@ -309,20 +344,29 @@ function animate() {
   // window.planets.earthGroup.getObjectByName("moon").position.z = 400*Math.sin(0.3*t + Math.PI/2) + 0;
 
   window.planets.jupiter.position.x =
-    900 * Math.cos(0.03 * t * window.params.orbitSpeed + Math.PI / 2) + 0;
+    900 * Math.cos(0.03 * t * window.params.orbitSpeed - Math.PI / 2) + 0;
   window.planets.jupiter.position.z =
-    900 * Math.sin(0.03 * t * window.params.orbitSpeed + Math.PI / 2) + 0;
+    900 * Math.sin(0.03 * t * window.params.orbitSpeed - Math.PI / 2) + 0;
 
   window.planets.saturn.position.x =
-    1200 * Math.cos(0.02 * t * window.params.orbitSpeed + Math.PI) + 0;
+    1200 * Math.cos(0.02 * t * window.params.orbitSpeed - Math.PI / 3) + 0;
   window.planets.saturn.position.z =
-    1200 * Math.sin(0.02 * t * window.params.orbitSpeed + Math.PI) + 0;
+    1200 * Math.sin(0.02 * t * window.params.orbitSpeed - Math.PI / 3) + 0;
 
   window.planets.saturnRingGroup.position.x =
-    1200 * Math.cos(0.02 * t * window.params.orbitSpeed + Math.PI) + 0;
+    1200 * Math.cos(0.02 * t * window.params.orbitSpeed - Math.PI / 3) + 0;
   window.planets.saturnRingGroup.position.z =
-    1200 * Math.sin(0.02 * t * window.params.orbitSpeed + Math.PI) + 0;
+    1200 * Math.sin(0.02 * t * window.params.orbitSpeed - Math.PI / 3) + 0;
 
+    window.planets.uranus.position.x =
+    1500 * Math.cos(0.015 * t * window.params.orbitSpeed - Math.PI / 6) + 0;
+  window.planets.uranus.position.z =
+    1500 * Math.sin(0.015 * t * window.params.orbitSpeed - Math.PI / 6) + 0;
+
+  window.planets.neptune.position.x =
+    1700 * Math.cos(0.012 * t * window.params.orbitSpeed + Math.PI / 5) + 0;
+  window.planets.neptune.position.z =
+    1700 * Math.sin(0.012 * t * window.params.orbitSpeed + Math.PI / 5) + 0;
   requestAnimationFrame(animate);
   controls.update(); // only required if controls.enableDamping = true, or if controls.autoRotate = true
   render();
@@ -456,7 +500,6 @@ async function addJupiter() {
     // thanks to https://free3d.com/user/ali_alkendi !
     // bump: await new THREE.TextureLoader().loadAsync("assets/marsbump.jpg"),
     map: await new THREE.TextureLoader().loadAsync("assets/jupitermap.jpg"),
-    spec: await new THREE.TextureLoader().loadAsync("assets/jupitermap.jpg"),
     // planeTrailMask: await new TextureLoader().loadAsync("assets/mask.png"),
   };
 
@@ -467,7 +510,7 @@ async function addJupiter() {
     new THREE.SphereGeometry(80, 32, 32),
     new THREE.MeshPhysicalMaterial({
       map: textures.map,
-      roughnessMap: textures.spec,
+      roughness: 0,
       // bumpMap: textures.bump,
       // bumpScale: 0.4,
       // sheen: 1,
@@ -485,10 +528,10 @@ async function addJupiter() {
   return sphere;
 }
 
-function addEarthPlaceholder() {
+function addEarthPlaceholder(sName) {
   var sphere = new THREE.Object3D();
-  sphere.name = "saturnPlaceholder";
-  sphere.position.set(0, 0, 1200);
+  sphere.name = "earthPlaceholder" + sName;
+  sphere.position.set(0, 0, 0);
   return sphere;
 }
 
@@ -522,7 +565,7 @@ async function addEarth() {
   sphere.moonEnvIntensity = 0.1;
   sphere.rotation.y += Math.PI * 1.25;
   sphere.receiveShadow = true;
-  sphere.position.set(0, 0, -300);
+  // sphere.position.set(0, 0, -300);
   sphere.name = "earth";
   return sphere;
 }
@@ -539,6 +582,7 @@ function addEarthClouds() {
   });
   var cloudMesh = new THREE.Mesh(geometry, material);
   // earthMesh.add(cloudMesh);
+  cloudMesh.name = "earthClouds";
   return cloudMesh;
 }
 
@@ -591,7 +635,6 @@ async function addSaturn() {
     // thanks to https://free3d.com/user/ali_alkendi !
     // bump: await new THREE.TextureLoader().loadAsync("assets/marsbump.jpg"),
     map: await new THREE.TextureLoader().loadAsync("assets/saturnmap.jpg"),
-    spec: await new THREE.TextureLoader().loadAsync("assets/saturnmap.jpg"),
     // planeTrailMask: await new TextureLoader().loadAsync("assets/mask.png"),
   };
 
@@ -602,7 +645,7 @@ async function addSaturn() {
     new THREE.SphereGeometry(65, 32, 32),
     new THREE.MeshStandardMaterial({
       map: textures.map,
-      roughnessMap: textures.spec,
+      roughness: 0,
       sheen: 1,
       sheenRoughness: 0.75,
       sheenColor: new THREE.Color("#ff8a00").convertSRGBToLinear(),
@@ -634,11 +677,15 @@ async function addSaturnRing() {
     color: 0xffffff,
     side: THREE.DoubleSide,
     transparent: true,
+    opacity: 0.5,
+    // sheen: 1,
+    // sheenRoughness: 0.75,
+    // sheenColor: new THREE.Color("#ff8a00").convertSRGBToLinear(),
   });
   const mesh = new THREE.Mesh(geometry, material);
 
   var saturnRing = new THREE.Mesh(geometry, material);
-  saturnRing.rotation.x += (-Math.PI / 2) * 1.2;
+  saturnRing.rotation.x += (Math.PI / 2) * 1.2;
   saturnRing.name = "saturnRing";
   return saturnRing;
 }
@@ -689,4 +736,80 @@ function drawCircle(radius, color, lineWidth) {
   //line.computeLineDistances();
 
   scene.add(line);
+}
+
+async function addISS() {
+  // const spaceStation = (await new GLTFLoader().loadAsync("assets/spacestation/isscombined.3ds")).scene.children[0];
+  var loader = new THREE.TextureLoader();
+  var normal = loader.load("assets/greycolor.png");
+  var loader = new TDSLoader();
+  const spacestation = await loader.loadAsync(
+    "assets/spacestation/isscombined.3ds"
+  );
+  spacestation.position.set(0, 0, 65);
+  spacestation.name = "ISS";
+  spacestation.rotation.y = (Math.PI / 2) * 1.3;
+  //  spacestation.scale( 5, 5 , 5 );
+  return spacestation;
+
+  //     var loader = new THREE.TextureLoader();
+  //     var normal = loader.load('assets/greycolor.png');
+  //     var loader = new TDSLoader();
+  //     loader.load('assets/spacestation/isscombined.3ds', function (object) {
+  //       object.traverse(function (child) {
+  //         if (child instanceof THREE.Mesh) {
+  //           child.material.normalMap = normal;
+  //         }
+  //       });
+  //       scene.add(object);
+  //     });
+}
+
+async function addUranus() {
+  var textures = {
+    map: await new THREE.TextureLoader().loadAsync("assets/uranusmap.jpg"),
+  };
+
+  var sphere = new THREE.Mesh(
+    new THREE.SphereGeometry(70, 32, 32),
+    new THREE.MeshStandardMaterial({
+      map: textures.map,
+      roughness: 0,
+      // sheen: 1,
+      // sheenRoughness: 0.75,
+      // sheenColor: new THREE.Color("#ff8a00").convertSRGBToLinear(),
+      clearcoat: 0.5,
+    })
+  );
+  sphere.sunEnvIntensity = 0.4;
+  sphere.moonEnvIntensity = 0.1;
+  sphere.rotation.y += Math.PI * 1.25;
+  sphere.receiveShadow = true;
+  sphere.position.set(0, 0, 1500);
+
+  return sphere;
+}
+
+async function addNeptune() {
+  var textures = {
+    map: await new THREE.TextureLoader().loadAsync("assets/neptunemap.jpg"),
+  };
+
+  var sphere = new THREE.Mesh(
+    new THREE.SphereGeometry(65, 32, 32),
+    new THREE.MeshPhongMaterial({
+      map: textures.map,
+      roughness: 0,
+      // sheen: 1,
+      // sheenRoughness: 0.75,
+      // sheenColor: new THREE.Color("#ff8a00").convertSRGBToLinear(),
+      clearcoat: 0.5,
+    })
+  );
+  sphere.sunEnvIntensity = 0.4;
+  sphere.moonEnvIntensity = 0.1;
+  sphere.rotation.y += Math.PI * 1.25;
+  sphere.receiveShadow = true;
+  sphere.position.set(0, 0, 1700);
+  return sphere;
 }
