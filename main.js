@@ -32,7 +32,7 @@ function init() {
     1,
     5000
   );
-  camera.position.set(-800, 400, 0);
+  camera.position.set(800, 400, 0);
   // camera.zoom = 5;
   // camera.position.setZ(30);
   // camera.position.set(1000, 600, 0);
@@ -57,15 +57,15 @@ function init() {
   // renderer.setClearColorHex( 0xffffff, 1 );
 
   //Skybox
-  const starGeometry = new THREE.SphereGeometry(3000, 64, 64);
-  const starMaterial = new THREE.MeshBasicMaterial({
-    map: new THREE.TextureLoader().load("assets/milkywayBackground.jpg"),
-    side: THREE.BackSide,
-    transparent: true,
-  });
-  const starMesh = new THREE.Mesh(starGeometry, starMaterial);
-  window.starMesh = starMesh;
-  scene.add(starMesh);
+  // const starGeometry = new THREE.SphereGeometry(3000, 64, 64);
+  // const starMaterial = new THREE.MeshBasicMaterial({
+  //   map: new THREE.TextureLoader().load("assets/milkywayBackground.jpg"),
+  //   side: THREE.BackSide,
+  //   transparent: true,
+  // });
+  // const starMesh = new THREE.Mesh(starGeometry, starMaterial);
+  // window.starMesh = starMesh;
+  // scene.add(starMesh);
 
   // OrbtiControls
   controls = new MapControls(camera, renderer.domElement);
@@ -87,73 +87,47 @@ function init() {
   controls.listenToKeyEvents(window);
 
   // Light
-  const pointLight = new THREE.PointLight(0xfffdee, 800, 3000, 1);
-  pointLight.position.set(0, 0, 0);
+  const pointLight = new THREE.PointLight(0xfffdee, 1000, 2000, 1);
+  pointLight.position.set(-500 / 2, 500, -500);
   pointLight.casTShadow = true;
   scene.add(pointLight);
 
-  const ambientLight = new THREE.AmbientLight(0x222222, 0.3);
+  const ambientLight = new THREE.AmbientLight(0x222222, 10);
   scene.add(ambientLight);
 
   //Events
-
   window.addEventListener("resize", () => {
     onWindowResize;
     bloomComposer.setSize(window.innerWidth, window.innerHeight);
   });
 
+  //Gridhelper
+  const size = 1000;
+  const divisions = 10;
+
+  const gridHelper = new THREE.GridHelper(size, divisions);
+  scene.add(gridHelper);
   //GUI
   // const gui = new GUI();
   // gui.add( gridHelper, 'visible' );r
+  // const gui = new GUI();
+  // const params = {
+  //   exposure: 1,
+  //   bloomStrength: 2.5,
+  //   bloomThreshold: 0.95,
+  //   bloomRadius: 0.5,
+  //   rotationSpeed: 1,
+  //   orbitSpeed: 1,
+  // };
+  // window.params = params;
+  // gui
+  //   .add(params, "orbitSpeed", 0.0, 5)
+  //   .step(0.01)
+  //   .onChange(function (value) {
+  //     window.params.orbitSpeed = Number(value);
+  //   }
 
-  const gui = new GUI();
-
-  const params = {
-    exposure: 1,
-    bloomStrength: 2.5,
-    bloomThreshold: 0.95,
-    bloomRadius: 0.5,
-    rotationSpeed: 1,
-    orbitSpeed: 1,
-  };
-
-  window.params = params;
-
-  gui.add(params, "exposure", 0.1, 2).onChange(function (value) {
-    renderer.toneMappingExposure = Math.pow(value, 4.0);
-  });
-
-  gui.add(params, "bloomThreshold", 0.0, 1).onChange(function (value) {
-    window.bloomPass.threshold = Number(value);
-  });
-
-  gui.add(params, "bloomStrength", 0.0, 5.0).onChange(function (value) {
-    window.bloomPass.strength = Number(value);
-  });
-
-  gui
-    .add(params, "bloomRadius", 0.0, 1.0)
-    .step(0.01)
-    .onChange(function (value) {
-      window.bloomPass.radius = Number(value);
-    });
-
-  gui
-    .add(params, "rotationSpeed", 0.0, 5)
-    .step(0.01)
-    .onChange(function (value) {
-      window.params.rotationSpeed = Number(value);
-    });
-
-  gui
-    .add(params, "orbitSpeed", 0.0, 5)
-    .step(0.01)
-    .onChange(function (value) {
-      window.params.orbitSpeed = Number(value);
-    });
-
-  //Add Planets
-
+  //Add Sun
   ///Add sun as post-processed object (bloom effects9)
   const renderScene = new RenderPass(scene, camera);
   const bloomPass = new UnrealBloomPass(
@@ -164,7 +138,7 @@ function init() {
   );
   bloomPass.threshold = 0.5;
   bloomPass.strength = 1.5; //intensity of glow
-  bloomPass.radius = 0.01;
+  bloomPass.radius = 0.1;
   // bloomPass.exposure = 0.1;
   const bloomComposer = new EffectComposer(renderer);
   bloomComposer.setSize(window.innerWidth, window.innerHeight);
@@ -174,204 +148,45 @@ function init() {
 
   //sun object //not Texture
   const color = new THREE.Color("#FDB813");
-  const geometry = new THREE.IcosahedronGeometry(100, 15);
+  const geometry = new THREE.IcosahedronGeometry(30, 15);
   const material = new THREE.MeshBasicMaterial({ color: color });
   const sphere = new THREE.Mesh(geometry, material);
-  sphere.position.set(0, 0, 0);
+  sphere.position.set(-500 / 2, 500, -500);
   window.bloomComposerSun = bloomComposer;
   window.bloomPass = bloomPass;
   scene.add(sphere);
 
-  //load Planets
-  var aPlanets = [];
-  window.planets = {};
+  scene.add( createSimple());
 
-  const promiseJupiter = addJupiter();
-  const promiseSun = addSun();
-  const promiseMars = addMars();
-  const promiseEarth = addEarth();
-  const promiseMoon = addMoon();
-  const promiseSaturn = addSaturn();
-  const promiseSaturnRing = addSaturnRing();
-  const promiseISS = addISS();
-  const promiseUranus = addUranus();
-  const promiseNeptune = addNeptune();
+  //loadData
+  // scene.add( createMap());
 
-  aPlanets.push(promiseSun);
-  aPlanets.push(promiseMars);
-  aPlanets.push(promiseJupiter);
-  aPlanets.push(promiseEarth);
-  aPlanets.push(promiseMoon);
-  aPlanets.push(promiseSaturn);
-  aPlanets.push(promiseSaturnRing);
-  aPlanets.push(promiseISS);
-  aPlanets.push(promiseUranus);
-  aPlanets.push(promiseNeptune);
-
-  Promise.all(aPlanets).then((aResponse) => {
-    // window.planets["sun"] = aResponse[0];
-    window.planets["mars"] = aResponse[1];
-    window.planets["jupiter"] = aResponse[2];
-
-    // window.planets["earth"] = aResponse[3];
-    // window.planets["earthGroup"] = addEarthPlaceholder();
-    // window.planets.earthGroup.add(aResponse[4]); //moon
-    // window.planets.earth.add(addEarthClouds());
-
-    // window.planets["earthGroup"] = new THREE.Group();
-    // window.planets.earthGroup.getObjectByName("earthPlaceholderMain").add(aResponse[3]);
-    // window.planets.earthGroup.push(  addEarthPlaceholder("Earth")  );
-    // window.planets.earthGroup.getObjectByName("earthPlaceholderEarth").add(aResponse[3]);
-
-    window.planets["earthGroup"] = addEarthPlaceholder("Center");
-    window.planets.earthGroup.add(aResponse[3]); //earth
-    window.planets.earthGroup.add(addEarthPlaceholder("Moon")); //Moon
-    window.planets.earthGroup
-      .getObjectByName("earthPlaceholderMoon")
-      .add(aResponse[4]);
-    window.planets.earthGroup.add(addEarthClouds()); //earthClouds
-
-    window.planets.earthGroup.add(addEarthPlaceholder("ISS")); //ISS
-    window.planets.earthGroup
-      .getObjectByName("earthPlaceholderISS")
-      .add(aResponse[7]);
-    window.planets.earthGroup.getObjectByName(
-      "earthPlaceholderISS"
-    ).rotation.x = Math.PI;
-
-    window.planets["saturn"] = aResponse[5];
-    window.planets["saturnRingGroup"] = addSaturnPlaceholder();
-    window.planets.saturnRingGroup.add(aResponse[6]); //saturnRing
-
-    window.planets["uranus"] = aResponse[8];
-    window.planets["neptune"] = aResponse[9];
-
-    //sun einbauen
-    // scene.add(window.planets.sun);
-    // window.planets["sunBloom"] = addSunBloom();
-    // scene.add( window.planets.sunBloom );
-
-    scene.add(window.planets.mars);
-    scene.add(window.planets.jupiter);
-    scene.add(window.planets.earthGroup);
-    scene.add(window.planets.saturn);
-    scene.add(window.planets.saturnRingGroup);
-    scene.add(window.planets.uranus);
-    scene.add(window.planets.neptune);
-
-    //Zusatz nicht asynchron
-    // window.planets.earthGroup["earthClouds"] = addEarthClouds();
-    // window.planets.earthGroup[]
-
-    animate();
-  });
-
-  // planetCircle();
-  // var torusEarth;
-  // torusEarth = planetCircle(torusEarth, 400);
-  // window.torusEarth = torusEarth;
-
-  // var torusJupiter;
-  // torusJupiter = planetCircle(torusJupiter, 900);
-  // window.torusJupiter = torusJupiter;
-
-  // var torusMars;
-  // torusMars = planetCircle(torusMars, 600);
-  // window.torusMars = torusMars;
-
-  // var torusSaturn;
-  // torusSaturn = planetCircle(torusSaturn, 1200);
-  // window.torusSaturn = torusSaturn;
+  animate();
 }
 
 var t = 0;
 // Animation Function
 function animate() {
-  //Graphic Effects
-  // camera.layers.set(1);
+  // starMesh.rotation.y += -0.0001;
 
-  // bloomComposer.render();
-
-  starMesh.rotation.y += -0.0001;
-
-  //Planet Movements
   t += 0.01;
 
-  //Rotation
-  window.planets.mars.rotation.y += 0.001 * window.params.rotationSpeed;
-  // window.planets.sun.rotation.y += 0.001;
-  window.planets.jupiter.rotation.y += 0.001 * window.params.rotationSpeed;
-  // window.planets.earthGroup.rotation.y += 0.001 * window.params.rotationSpeed;
-  // window.planets.earth.rotation.y += 0.002 * window.params.rotationSpeed;
-
   //EarthGroup Rotation
-  window.planets.earthGroup.getObjectByName("earth").rotation.y +=
-    0.002 * window.params.rotationSpeed;
-  window.planets.earthGroup.getObjectByName(
-    "earthPlaceholderMoon"
-  ).rotation.y += 0.0015 * window.params.rotationSpeed;
-  window.planets.earthGroup.getObjectByName("earthClouds").rotation.y +=
-    0.0015 * window.params.rotationSpeed;
-  //  window.planets.earthGroup.getObjectByName("earthPlaceholderISS").rotation.x += 0.0025 * window.params.rotationSpeed;
-  window.planets.earthGroup.getObjectByName("earthPlaceholderISS").rotation.x +=
-    0.003 * window.params.rotationSpeed;
-
-  window.planets.saturn.rotation.y += 0.002 * window.params.rotationSpeed;
-  window.planets.uranus.rotation.z += 0.002 * window.params.rotationSpeed;
-  window.planets.neptune.rotation.y += 0.002 * window.params.rotationSpeed;
-  //Torus /Schweif
-  // window.torusEarth.rotation.z = 0.1 * t + Math.PI / 2; //earth speed als konstante anlegen
-  // window.torusMars.rotation.z = 0.05 * t;
-  // window.torusJupiter.rotation.z = 0.03 * t + Math.PI / 2;
-  // window.torusSaturn.rotation.z = 0.02 * t + Math.PI;
+  // window.planets.earthGroup.getObjectByName("earth").rotation.y +=
+  //   0.002 * window.params.rotationSpeed;
+  // window.planets.saturn.rotation.y += 0.002 * window.params.rotationSpeed;
 
   //Position 2D
-  window.planets.mars.position.x =
-    600 * Math.cos(0.05 * t * window.params.orbitSpeed) + 0;
-  window.planets.mars.position.z =
-    600 * Math.sin(0.05 * t * window.params.orbitSpeed) + 0;
+  // window.planets.mars.position.x =
+  //   600 * Math.cos(0.05 * t * window.params.orbitSpeed) + 0;
+  // window.planets.mars.position.z =
+  //   600 * Math.sin(0.05 * t * window.params.orbitSpeed) + 0;
 
-  // window.planets.earth.position.x =
-  //   400 * Math.cos(0.1 * t * window.params.orbitSpeed + Math.PI / 2) + 0;
-  // window.planets.earth.position.z =
-  //   400 * Math.sin(0.1 * t * window.params.orbitSpeed + Math.PI / 2) + 0;
-  window.planets.earthGroup.position.x =
-    400 * Math.cos(0.1 * t * window.params.orbitSpeed + Math.PI / 2) + 0;
-  window.planets.earthGroup.position.z =
-    400 * Math.sin(0.1 * t * window.params.orbitSpeed + Math.PI / 2) + 0;
-
-  // window.planets.earthGroup.getObjectByName("moon").position.x = 400*Math.cos(0.3*t + Math.PI/2) + 0;
-  // window.planets.earthGroup.getObjectByName("moon").position.z = 400*Math.sin(0.3*t + Math.PI/2) + 0;
-
-  window.planets.jupiter.position.x =
-    900 * Math.cos(0.03 * t * window.params.orbitSpeed - Math.PI / 2) + 0;
-  window.planets.jupiter.position.z =
-    900 * Math.sin(0.03 * t * window.params.orbitSpeed - Math.PI / 2) + 0;
-
-  window.planets.saturn.position.x =
-    1200 * Math.cos(0.02 * t * window.params.orbitSpeed - Math.PI / 3) + 0;
-  window.planets.saturn.position.z =
-    1200 * Math.sin(0.02 * t * window.params.orbitSpeed - Math.PI / 3) + 0;
-
-  window.planets.saturnRingGroup.position.x =
-    1200 * Math.cos(0.02 * t * window.params.orbitSpeed - Math.PI / 3) + 0;
-  window.planets.saturnRingGroup.position.z =
-    1200 * Math.sin(0.02 * t * window.params.orbitSpeed - Math.PI / 3) + 0;
-
-    window.planets.uranus.position.x =
-    1500 * Math.cos(0.015 * t * window.params.orbitSpeed - Math.PI / 6) + 0;
-  window.planets.uranus.position.z =
-    1500 * Math.sin(0.015 * t * window.params.orbitSpeed - Math.PI / 6) + 0;
-
-  window.planets.neptune.position.x =
-    1700 * Math.cos(0.012 * t * window.params.orbitSpeed + Math.PI / 5) + 0;
-  window.planets.neptune.position.z =
-    1700 * Math.sin(0.012 * t * window.params.orbitSpeed + Math.PI / 5) + 0;
   requestAnimationFrame(animate);
   controls.update(); // only required if controls.enableDamping = true, or if controls.autoRotate = true
   render();
-
-  window.bloomComposerSun.render(); //durch promise asynchron und deshalb nicht abgespeichert
+  // window.bloomComposerSun.render(); //durch promise asynchron und deshalb nicht abgespeichert
+  // renderer.setClearColor("rgb(	76, 168, 230)"); //renderer
 }
 
 // Render Function
@@ -386,430 +201,201 @@ function onWindowResize() {
   renderer.setSize(window.innerWidth, window.innerHeight);
 }
 
-//Mars
-async function addMars() {
-  var textures = {
-    // thanks to https://free3d.com/user/ali_alkendi !
-    bump: await new THREE.TextureLoader().loadAsync("assets/marsbump.jpg"),
-    map: await new THREE.TextureLoader().loadAsync("assets/marsmap.jpg"),
-    // spec: await new THREE.TextureLoader().loadAsync("assets/marsmap.jpg"),
-    // planeTrailMask: await new TextureLoader().loadAsync("assets/mask.png"),
-  };
+function createMap() {
+  // const groundGeo = new THREE.PlaneGeometry(1000, 1000);
 
-  // Important to know!
-  // textures.map.encoding = sRGBEncoding;
-  var mars = new THREE.Mesh(
-    new THREE.SphereGeometry(45, 32, 32),
-    new THREE.MeshPhysicalMaterial({
-      toneMapped: true,
-      map: textures.map,
-      // roughnessMap: textures.spec,
-      bumpMap: textures.bump,
-      bumpScale: 0.3,
-      sheen: 1,
-      sheenRoughness: 0.5,
-      sheenColor: new THREE.Color("#ff8a00").convertSRGBToLinear(),
-      clearcoat: 0.5,
-    })
-  );
-  mars.sunEnvIntensity = 0.4;
-  mars.moonEnvIntensity = 0.1;
-  mars.rotation.y += Math.PI * 1.25;
-  mars.receiveShadow = true;
-  mars.position.set(0, 0, 500);
+  // const disMap = new THREE.TextureLoader().load("assets/heightmapExample.jpg");
+  // const texture = new THREE.TextureLoader().load("assets/greycolor.png");
 
-  return mars;
+  // // const material = new THREE.MeshBasicMaterial( {color: 0xffff00, side: THREE.DoubleSide} );
+
+  // const groundMat = new THREE.MeshStandardMaterial({
+  //   // color: 0xffffff,
+  //   map: disMap,
+  //   // wireframe: true,
+  //   side: THREE.DoubleSide,
+  //   // displacementMap: disMap,
+  //   // displacementScale: 1,
+  //   //     transparent: true,
+  //   //     opacity: 0.5,j
+  //   // sheen: 1,
+  // });
+
+  //   const groundMesh = new THREE.Mesh(groundGeo, groundMat);
+  // // groundMesh.rotation.x= Math.PI/2;
+
+  // return groundMesh;
 }
 
-//Sun
-async function addSun() {
-  var textures = {
-    // thanks to https://free3d.com/user/ali_alkendi !
-    // bump: await new THREE.TextureLoader().loadAsync("assets/marsbump.jpg"),
-    map: await new THREE.TextureLoader().loadAsync("assets/sunmap.jpg"),
-    spec: await new THREE.TextureLoader().loadAsync("assets/sunmap.jpg"),
-    // planeTrailMask: await new TextureLoader().loadAsync("assets/mask.png"),
-  };
 
-  // Important to know!
-  // textures.map.encoding = sRGBEncoding;
+function createSimple() {
+  const geometry = new THREE.PlaneBufferGeometry( 2160, 1080, 128, 128 );
 
-  var sphere = new THREE.Mesh(
-    new THREE.SphereGeometry(120, 32, 32),
-    new THREE.MeshBasicMaterial({
-      map: textures.map,
-      roughnessMap: textures.spec,
-      // bumpMap: textures.bump,
-      // bumpScale: 0.4,
-      sheen: 1,
-      sheenRoughness: 0.75,
-      shininess: 10,
-      sheenColor: new THREE.Color("#ff8a00").convertSRGBToLinear(),
-      clearcoat: 0.5,
-      shininess: 1,
-    })
-  );
-  // sphere.sunEnvIntensity = 0.4;
-  // sphere.moonEnvIntensity = 0.1;
-  sphere.rotation.y += Math.PI * 1.25;
-  sphere.receiveShadow = true;
-  sphere.position.set(0, 0, 0);
+  const texture = new THREE.TextureLoader().load("assets/heightmapExample.jpg");
 
-  return sphere;
-}
-
-//bloom sun
-function addSunBloom() {
-  const renderScene = new RenderPass(scene, camera);
-  const bloomPass = new UnrealBloomPass(
-    new THREE.Vector2(window.innerWidth, window.innerHeight),
-    1.5,
-    0.4,
-    0.85
-  );
-  // bloomPass.threshold = 1;
-  // bloomPass.strength = 1; //intensity of glow
-  // bloomPass.radius = 0;
-
-  bloomPass.threshold = params.bloomThreshold;
-  bloomPass.strength = params.bloomStrength;
-  bloomPass.radius = params.bloomRadius;
-
-  // bloomPass.expose = 1;
-  const bloomComposer = new EffectComposer(renderer);
-  // bloomComposer.setSize(window.innerWidth, window.innerHeight);
-  bloomComposer.setSize(512, 512);
-  bloomComposer.renderToScreen = true;
-  bloomComposer.addPass(renderScene);
-  bloomComposer.addPass(bloomPass);
-
-  //sun object
-  const color = new THREE.Color("#FDB813");
-  const geometry = new THREE.IcosahedronGeometry(1, 15);
-  const material = new THREE.MeshBasicMaterial({ color: color });
-  const sphere = new THREE.Mesh(geometry, material);
-  sphere.position.set(0, 0, 0);
-
-  window.bloomComposerSun = bloomComposer;
-  return sphere;
-}
-
-//Jupiter
-async function addJupiter() {
-  var textures = {
-    // thanks to https://free3d.com/user/ali_alkendi !
-    // bump: await new THREE.TextureLoader().loadAsync("assets/marsbump.jpg"),
-    map: await new THREE.TextureLoader().loadAsync("assets/jupitermap.jpg"),
-    // planeTrailMask: await new TextureLoader().loadAsync("assets/mask.png"),
-  };
-
-  // Important to know!
-  // textures.map.encoding = sRGBEncoding;
-
-  var sphere = new THREE.Mesh(
-    new THREE.SphereGeometry(80, 32, 32),
-    new THREE.MeshPhysicalMaterial({
-      map: textures.map,
-      roughness: 0,
-      // bumpMap: textures.bump,
-      // bumpScale: 0.4,
-      // sheen: 1,
-      // sheenRoughness: 0.75,
-      // sheenColor: new THREE.Color("#ff8a00").convertSRGBToLinear(),
-      clearcoat: 0.5,
-    })
-  );
-  sphere.sunEnvIntensity = 0.4;
-  sphere.moonEnvIntensity = 0.1;
-  sphere.rotation.y += Math.PI * 1.25;
-  sphere.receiveShadow = true;
-  sphere.position.set(0, 0, 1000);
-
-  return sphere;
-}
-
-function addEarthPlaceholder(sName) {
-  var sphere = new THREE.Object3D();
-  sphere.name = "earthPlaceholder" + sName;
-  sphere.position.set(0, 0, 0);
-  return sphere;
-}
-
-//Earth
-async function addEarth() {
-  var textures = {
-    // thanks to https://free3d.com/user/ali_alkendi !
-    bump: await new THREE.TextureLoader().loadAsync("assets/earthbump.jpg"),
-    map: await new THREE.TextureLoader().loadAsync("assets/earthmap.jpg"),
-    spec: await new THREE.TextureLoader().loadAsync("assets/earthspec.jpg"),
-    // planeTrailMask: await new TextureLoader().loadAsync("assets/mask.png"),
-  };
-
-  // Important to know!
-  // textures.map.encoding = sRGBEncoding;
-
-  var sphere = new THREE.Mesh(
-    new THREE.SphereGeometry(50, 32, 32),
-    new THREE.MeshPhysicalMaterial({
-      map: textures.map,
-      roughnessMap: textures.spec,
-      bumpMap: textures.bump,
-      bumpScale: 0.6,
-      // sheen: 1,
-      // sheenRoughness: 0.75,
-      // sheenColor: new THREE.Color("#ff8a00").convertSRGBToLinear(),
-      clearcoat: 0.1,
-    })
-  );
-  sphere.sunEnvIntensity = 0.4;
-  sphere.moonEnvIntensity = 0.1;
-  sphere.rotation.y += Math.PI * 1.25;
-  sphere.receiveShadow = true;
-  // sphere.position.set(0, 0, -300);
-  sphere.name = "earth";
-  return sphere;
-}
-
-//earthCLouds
-function addEarthClouds() {
-  var geometry = new THREE.SphereGeometry(52, 32, 32);
-  var material = new THREE.MeshPhongMaterial({
-    map: new THREE.TextureLoader().load("assets/earthclouds.jpg"),
-    side: THREE.DoubleSide,
-    opacity: 0.8,
-    transparent: true,
-    depthWrite: false,
-  });
-  var cloudMesh = new THREE.Mesh(geometry, material);
-  // earthMesh.add(cloudMesh);
-  cloudMesh.name = "earthClouds";
-  return cloudMesh;
-}
-
-//Moon
-async function addMoon() {
-  var textures = {
-    // thanks to https://free3d.com/user/ali_alkendi !
-    bump: await new THREE.TextureLoader().loadAsync("assets/moonbump.jpg"),
-    map: await new THREE.TextureLoader().loadAsync("assets/moonmap.jpg"),
-    spec: await new THREE.TextureLoader().loadAsync("assets/moonmap.jpg"),
-    // planeTrailMask: await new TextureLoader().loadAsync("assets/mask.png"),
-  };
-
-  // Important to know!
-  // textures.map.encoding = sRGBEncoding;
-
-  var sphere = new THREE.Mesh(
-    new THREE.SphereGeometry(25, 32, 32),
-    new THREE.MeshPhysicalMaterial({
-      map: textures.map,
-      roughnessMap: textures.spec,
-      bumpMap: textures.bump,
-      bumpScale: 0.5,
-      // sheen: 1,
-      // sheenRoughness: 0.75,
-      // sheenColor: new THREE.Color("#ff8a00").convertSRGBToLinear(),
-      clearcoat: 0.5,
-    })
-  );
-  sphere.sunEnvIntensity = 0.4;
-  sphere.moonEnvIntensity = 0.1;
-  sphere.rotation.y += Math.PI * 1.25;
-  sphere.receiveShadow = true;
-  sphere.position.set(0, 0, 150);
-  sphere.name = "moon";
-  return sphere;
-}
-
-//saturn Placeholder
-function addSaturnPlaceholder() {
-  var sphere = new THREE.Object3D();
-  sphere.name = "saturnPlaceholder";
-  sphere.position.set(0, 0, 1200);
-  return sphere;
-}
-
-//Saturn
-async function addSaturn() {
-  var textures = {
-    // thanks to https://free3d.com/user/ali_alkendi !
-    // bump: await new THREE.TextureLoader().loadAsync("assets/marsbump.jpg"),
-    map: await new THREE.TextureLoader().loadAsync("assets/saturnmap.jpg"),
-    // planeTrailMask: await new TextureLoader().loadAsync("assets/mask.png"),
-  };
-
-  // Important to know!
-  // textures.map.encoding = sRGBEncoding;
-
-  var sphere = new THREE.Mesh(
-    new THREE.SphereGeometry(65, 32, 32),
-    new THREE.MeshStandardMaterial({
-      map: textures.map,
-      roughness: 0,
-      sheen: 1,
-      sheenRoughness: 0.75,
-      sheenColor: new THREE.Color("#ff8a00").convertSRGBToLinear(),
-      clearcoat: 0.5,
-    })
-  );
-  sphere.sunEnvIntensity = 0.4;
-  sphere.moonEnvIntensity = 0.1;
-  sphere.rotation.y += Math.PI * 1.25;
-  sphere.receiveShadow = true;
-  sphere.name = "saturn";
-  sphere.position.set(0, 0, 1200);
-
-  return sphere;
-}
-
-//Saturn ring
-async function addSaturnRing() {
-  const texture = new THREE.TextureLoader().load("assets/saturnring.png");
-  const geometry = new THREE.RingGeometry(70, 180, 64);
-  var pos = geometry.attributes.position;
-  var v3 = new THREE.Vector3();
-  for (let i = 0; i < pos.count; i++) {
-    v3.fromBufferAttribute(pos, i);
-    geometry.attributes.uv.setXY(i, v3.length() < 80 ? 0 : 1, 1);
-  }
-  const material = new THREE.MeshBasicMaterial({
+  //material
+  const material = new THREE.MeshStandardMaterial( {
+    // color: 0xffffff,
     map: texture,
-    color: 0xffffff,
-    side: THREE.DoubleSide,
-    transparent: true,
-    opacity: 0.5,
+    // side: THREE.DoubleSide,
+    displacementMap: texture,
+    displacementScale: 100,
+    //     transparent: true,
+    //     opacity: 0.5,j
     // sheen: 1,
-    // sheenRoughness: 0.75,
-    // sheenColor: new THREE.Color("#ff8a00").convertSRGBToLinear(),
+    // color: 0xffff00, 
+    // side: THREE.DoubleSide,
   });
-  const mesh = new THREE.Mesh(geometry, material);
 
-  var saturnRing = new THREE.Mesh(geometry, material);
-  saturnRing.rotation.x += (Math.PI / 2) * 1.2;
-  saturnRing.name = "saturnRing";
-  return saturnRing;
+  //plane
+  const plane = new THREE.Mesh( geometry, material );
+  plane.rotation.x= -Math.PI/2;
+  plane.rotation.z= Math.PI/2;
+  return plane;
+
 }
 
-// Thanks for the deathstar!
-// https://sketchfab.com/3d-models/death-star-star-wars-3d5f01485e9e4e8b9d995d7764341afe
 
-//Circles
-// function planetCircle(oTorus, aRadius) {
-//   let materialCircle = new THREE.MeshStandardMaterial({ color: 0xffff00 });
-//   // let material = new THREE.MeshPhysicalMaterial({
-//   //   color: 0xffff00
-//   //   // sheen: 1,
-//   //   // sheenRoughness: 0.75,
-//   //   // sheenColor: new THREE.Color("0xffff00").convertSRGBToLinear(),
-//   //   // clearcoat: 0.5,
-//   // })
-
-//   let geometry = new THREE.TorusGeometry(aRadius, 3, 5, 50, -1);
-//   oTorus = new THREE.Mesh(geometry, materialCircle);
-//   oTorus.rotation.x += Math.PI / 2;
-//   // oTorus.material = darkMaterial;
-//   scene.add(oTorus);
-//   return oTorus;
+// //saturn Placeholder
+// function addSaturnPlaceholder() {
+//   var sphere = new THREE.Object3D();
+//   sphere.name = "saturnPlaceholder";
+//   sphere.position.set(0, 0, 1200);
+//   return sphere;
 // }
 
-function drawCircle(radius, color, lineWidth) {
-  var points = [];
+// //Saturn
+// async function addSaturn() {
+//   var textures = {
+//     // thanks to https://free3d.com/user/ali_alkendi !
+//     // bump: await new THREE.TextureLoader().loadAsync("assets/marsbump.jpg"),
+//     map: await new THREE.TextureLoader().loadAsync("assets/saturnmap.jpg"),
+//     // planeTrailMask: await new TextureLoader().loadAsync("assets/mask.png"),
+//   };
 
-  // 360 full circle will be drawn clockwise
-  for (let i = 0; i <= 360; i++) {
-    points.push(
-      Math.sin(i * (Math.PI / 180)) * radius,
-      Math.cos(i * (Math.PI / 180)) * radius,
-      0
-    );
-  }
+//   // Important to know!
+//   // textures.map.encoding = sRGBEncoding;
 
-  var geometry = new THREE.LineGeometry();
-  geometry.setPositions(points);
+//   var sphere = new THREE.Mesh(
+//     new THREE.SphereGeometry(65, 32, 32),
+//     new THREE.MeshStandardMaterial({
+//       map: textures.map,
+//       roughness: 0,
+//       sheen: 1,
+//       sheenRoughness: 0.75,
+//       sheenColor: new THREE.Color("#ff8a00").convertSRGBToLinear(),
+//       clearcoat: 0.5,
+//     })
+//   );
+//   sphere.sunEnvIntensity = 0.4;
+//   sphere.moonEnvIntensity = 0.1;
+//   sphere.rotation.y += Math.PI * 1.25;
+//   sphere.receiveShadow = true;
+//   sphere.name = "saturn";
+//   sphere.position.set(0, 0, 1200);
 
-  var material = new THREE.LineMaterial({
-    color: color,
-    linewidth: lineWidth,
-  });
+//   return sphere;
+// }
 
-  let line = new THREE.Line2(geometry, material);
-  //line.computeLineDistances();
+// //Saturn ring
+// async function addSaturnRing() {
+//   const texture = new THREE.TextureLoader().load("assets/saturnring.png");
+//   const geometry = new THREE.RingGeometry(70, 180, 64);
+//   var pos = geometry.attributes.position;
+//   var v3 = new THREE.Vector3();
+//   for (let i = 0; i < pos.count; i++) {
+//     v3.fromBufferAttribute(pos, i);
+//     geometry.attributes.uv.setXY(i, v3.length() < 80 ? 0 : 1, 1);
+//   }
+//   const material = new THREE.MeshBasicMaterial({
+//     map: texture,
+//     color: 0xffffff,
+//     side: THREE.DoubleSide,
+//     transparent: true,
+//     opacity: 0.5,
+//     // sheen: 1,
+//     // sheenRoughness: 0.75,
+//     // sheenColor: new THREE.Color("#ff8a00").convertSRGBToLinear(),
+//   });
+//   const mesh = new THREE.Mesh(geometry, material);
 
-  scene.add(line);
-}
+//   var saturnRing = new THREE.Mesh(geometry, material);
+//   saturnRing.rotation.x += (Math.PI / 2) * 1.2;
+//   saturnRing.name = "saturnRing";
+//   return saturnRing;
+// }
 
-async function addISS() {
-  // const spaceStation = (await new GLTFLoader().loadAsync("assets/spacestation/isscombined.3ds")).scene.children[0];
-  var loader = new THREE.TextureLoader();
-  var normal = loader.load("assets/greycolor.png");
-  var loader = new TDSLoader();
-  const spacestation = await loader.loadAsync(
-    "assets/spacestation/isscombined.3ds"
-  );
-  spacestation.position.set(0, 0, 65);
-  spacestation.name = "ISS";
-  spacestation.rotation.y = (Math.PI / 2) * 1.3;
-  //  spacestation.scale( 5, 5 , 5 );
-  return spacestation;
+// // Thanks for the deathstar!
+// // https://sketchfab.com/3d-models/death-star-star-wars-3d5f01485e9e4e8b9d995d7764341afe
 
-  //     var loader = new THREE.TextureLoader();
-  //     var normal = loader.load('assets/greycolor.png');
-  //     var loader = new TDSLoader();
-  //     loader.load('assets/spacestation/isscombined.3ds', function (object) {
-  //       object.traverse(function (child) {
-  //         if (child instanceof THREE.Mesh) {
-  //           child.material.normalMap = normal;
-  //         }
-  //       });
-  //       scene.add(object);
-  //     });
-}
+// //Circles
+// // function planetCircle(oTorus, aRadius) {
+// //   let materialCircle = new THREE.MeshStandardMaterial({ color: 0xffff00 });
+// //   // let material = new THREE.MeshPhysicalMaterial({
+// //   //   color: 0xffff00
+// //   //   // sheen: 1,
+// //   //   // sheenRoughness: 0.75,
+// //   //   // sheenColor: new THREE.Color("0xffff00").convertSRGBToLinear(),
+// //   //   // clearcoat: 0.5,
+// //   // })
 
-async function addUranus() {
-  var textures = {
-    map: await new THREE.TextureLoader().loadAsync("assets/uranusmap.jpg"),
-  };
+// //   let geometry = new THREE.TorusGeometry(aRadius, 3, 5, 50, -1);
+// //   oTorus = new THREE.Mesh(geometry, materialCircle);
+// //   oTorus.rotation.x += Math.PI / 2;
+// //   // oTorus.material = darkMaterial;
+// //   scene.add(oTorus);
+// //   return oTorus;
+// // }
 
-  var sphere = new THREE.Mesh(
-    new THREE.SphereGeometry(70, 32, 32),
-    new THREE.MeshStandardMaterial({
-      map: textures.map,
-      roughness: 0,
-      // sheen: 1,
-      // sheenRoughness: 0.75,
-      // sheenColor: new THREE.Color("#ff8a00").convertSRGBToLinear(),
-      clearcoat: 0.5,
-    })
-  );
-  sphere.sunEnvIntensity = 0.4;
-  sphere.moonEnvIntensity = 0.1;
-  sphere.rotation.y += Math.PI * 1.25;
-  sphere.receiveShadow = true;
-  sphere.position.set(0, 0, 1500);
+// function drawCircle(radius, color, lineWidth) {
+//   var points = [];
 
-  return sphere;
-}
+//   // 360 full circle will be drawn clockwise
+//   for (let i = 0; i <= 360; i++) {
+//     points.push(
+//       Math.sin(i * (Math.PI / 180)) * radius,
+//       Math.cos(i * (Math.PI / 180)) * radius,
+//       0
+//     );
+//   }
 
-async function addNeptune() {
-  var textures = {
-    map: await new THREE.TextureLoader().loadAsync("assets/neptunemap.jpg"),
-  };
+//   var geometry = new THREE.LineGeometry();
+//   geometry.setPositions(points);
 
-  var sphere = new THREE.Mesh(
-    new THREE.SphereGeometry(65, 32, 32),
-    new THREE.MeshPhongMaterial({
-      map: textures.map,
-      roughness: 0,
-      // sheen: 1,
-      // sheenRoughness: 0.75,
-      // sheenColor: new THREE.Color("#ff8a00").convertSRGBToLinear(),
-      clearcoat: 0.5,
-    })
-  );
-  sphere.sunEnvIntensity = 0.4;
-  sphere.moonEnvIntensity = 0.1;
-  sphere.rotation.y += Math.PI * 1.25;
-  sphere.receiveShadow = true;
-  sphere.position.set(0, 0, 1700);
-  return sphere;
-}
+//   var material = new THREE.LineMaterial({
+//     color: color,
+//     linewidth: lineWidth,
+//   });
+
+//   let line = new THREE.Line2(geometry, material);
+//   //line.computeLineDistances();
+
+//   scene.add(line);
+// }
+
+// async function addISS() {
+//   // const spaceStation = (await new GLTFLoader().loadAsync("assets/spacestation/isscombined.3ds")).scene.children[0];
+//   var loader = new THREE.TextureLoader();
+//   var normal = loader.load("assets/greycolor.png");
+//   var loader = new TDSLoader();
+//   const spacestation = await loader.loadAsync(
+//     "assets/spacestation/isscombined.3ds"
+//   );
+//   spacestation.position.set(0, 0, 65);
+//   spacestation.name = "ISS";
+//   spacestation.rotation.y = (Math.PI / 2) * 1.3;
+//   //  spacestation.scale( 5, 5 , 5 );
+//   return spacestation;
+
+//   //     var loader = new THREE.TextureLoader();
+//   //     var normal = loader.load('assets/greycolor.png');
+//   //     var loader = new TDSLoader();
+//   //     loader.load('assets/spacestation/isscombined.3ds', function (object) {
+//   //       object.traverse(function (child) {
+//   //         if (child instanceof THREE.Mesh) {
+//   //           child.material.normalMap = normal;
+//   //         }
+//   //       });
+//   //       scene.add(object);
+//   //     });
+// }

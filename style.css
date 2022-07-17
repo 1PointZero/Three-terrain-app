@@ -13,7 +13,6 @@ html, body {
   height: 100%;
   padding-left: 0; 
   padding-right: 0;
-
   /* height: 100vh; */
   /* background: #bdc3c7; */
 
@@ -21,37 +20,19 @@ html, body {
 
 body {
   margin: 0;
- 
 }
 
-/* .star-background {
+.background-minimalistic {
   position: absolute;
   width: 100%;
   height: 100%;
-  /* background: linear-gradient(313deg, #0b1a2b 33%, #000000 111%); */
-  /* background-image: url("./assets/backgroundStars.jpg");
-  background-repeat: repeat;
-} */
-
-/* .milkyway-background {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(313deg, #0b1a2b 33%, #000000 111%);
-  background-image: url("./assets/milkywayBackground.jpg");
-  background-repeat: repeat;
-}   */
-
-.milkyway-background {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(313deg, #0b1a2b 33%, #000000 111%);
-  background-image: url("./assets/milkywayBackground.jpg");
-  background-repeat: repeat;
+   /* background-image: url("./assets/greycolor.png"); */
+  /* background: #5ebd8d 100%; */
+  background: linear-gradient(313deg, #b3e4e6 33%, #58c1c9 111%); 
+  /* background-repeat: repeat; */
 }  
 
 canvas {
   position: relative;
-  display: block;
+  /* display: block; */
 }
