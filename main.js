@@ -16,6 +16,11 @@ import { UnrealBloomPass } from "https://cdn.skypack.dev/three-stdlib@2.8.5/post
 import { TDSLoader } from "https://cdn.skypack.dev/three-stdlib@2.8.5/loaders/TDSLoader";
 import { FBXLoader } from "https://cdn.skypack.dev/three-stdlib@2.8.5/loaders/FBXLoader";
 
+// import Stats from "https://cdn.skypack.dev/three-stdlib@2.8.5/libs/stats";
+import Stats from "https://cdn.skypack.dev/stats.js.fps";
+import { Water } from "https://cdn.skypack.dev/three-stdlib@2.8.5/objects/Water";
+import { Sky } from "https://cdn.skypack.dev/three-stdlib@2.8.5/objects/Sky";
+
 let renderer, scene, camera, controls;
 
 init();
@@ -32,7 +37,7 @@ function init() {
     1,
     5000
   );
-  camera.position.set(800, 400, 0);
+  camera.position.set(0, 400, -800);
   // camera.zoom = 5;
   // camera.position.setZ(30);
   // camera.position.set(1000, 600, 0);
@@ -58,8 +63,8 @@ function init() {
 
   //Skybox
   // const starGeometry = new THREE.SphereGeometry(3000, 64, 64);
-  // const starMaterial = new THREE.MeshBasicMaterial({
-  //   map: new THREE.TextureLoader().load("assets/milkywayBackground.jpg"),
+  // const starMaterial = new THREE.MeshStandardMaterial({
+  //   map: new THREE.TextureLoader().load("assets/minimalisticSky.jpg"),
   //   side: THREE.BackSide,
   //   transparent: true,
   // });
@@ -87,12 +92,12 @@ function init() {
   controls.listenToKeyEvents(window);
 
   // Light
-  const pointLight = new THREE.PointLight(0xfffdee, 1000, 2000, 1);
-  pointLight.position.set(-500 / 2, 500, -500);
+  const pointLight = new THREE.PointLight(0xfffdee, 300, 3000, 1);
+  pointLight.position.set(-500, 500, 500);
   pointLight.casTShadow = true;
   scene.add(pointLight);
 
-  const ambientLight = new THREE.AmbientLight(0x222222, 10);
+  const ambientLight = new THREE.AmbientLight(0x222222, 3);
   scene.add(ambientLight);
 
   //Events
@@ -102,10 +107,11 @@ function init() {
   });
 
   //Gridhelper
-  const size = 1000;
+  const size = 3000;
   const divisions = 10;
 
   const gridHelper = new THREE.GridHelper(size, divisions);
+  // gridHelper.position(0,10,0);
   scene.add(gridHelper);
   //GUI
   // const gui = new GUI();
@@ -151,12 +157,19 @@ function init() {
   const geometry = new THREE.IcosahedronGeometry(30, 15);
   const material = new THREE.MeshBasicMaterial({ color: color });
   const sphere = new THREE.Mesh(geometry, material);
-  sphere.position.set(-500 / 2, 500, -500);
+  sphere.position.set(-500, 500, 500);
   window.bloomComposerSun = bloomComposer;
   window.bloomPass = bloomPass;
   scene.add(sphere);
 
-  scene.add( createSimple());
+  //add Waterd
+  const water = addWater();
+  scene.add(water);
+  window.water = water;
+
+  //Add Main Objects
+  // scene.add( createSimple());
+  scene.add(createFantasy());
 
   //loadData
   // scene.add( createMap());
@@ -182,16 +195,26 @@ function animate() {
   // window.planets.mars.position.z =
   //   600 * Math.sin(0.05 * t * window.params.orbitSpeed) + 0;
 
+
+
+
+
   requestAnimationFrame(animate);
   controls.update(); // only required if controls.enableDamping = true, or if controls.autoRotate = true
   render();
-  // window.bloomComposerSun.render(); //durch promise asynchron und deshalb nicht abgespeichert
-  // renderer.setClearColor("rgb(	76, 168, 230)"); //renderer
+
+  
 }
 
 // Render Function
 function render() {
+//water Renderer
+  const time = performance.now() * 0.001;
+  window.water.material.uniforms[ 'time' ].value += 1.0 / 60.0;
   renderer.render(scene, camera);
+
+  window.bloomComposerSun.render(); //durch promise asynchron und deshalb nicht abgespeichert
+  renderer.setClearColor("rgb(	76, 168, 230)", 0.5); //renderer
 }
 
 //Resize Function
@@ -201,40 +224,13 @@ function onWindowResize() {
   renderer.setSize(window.innerWidth, window.innerHeight);
 }
 
-function createMap() {
-  // const groundGeo = new THREE.PlaneGeometry(1000, 1000);
-
-  // const disMap = new THREE.TextureLoader().load("assets/heightmapExample.jpg");
-  // const texture = new THREE.TextureLoader().load("assets/greycolor.png");
-
-  // // const material = new THREE.MeshBasicMaterial( {color: 0xffff00, side: THREE.DoubleSide} );
-
-  // const groundMat = new THREE.MeshStandardMaterial({
-  //   // color: 0xffffff,
-  //   map: disMap,
-  //   // wireframe: true,
-  //   side: THREE.DoubleSide,
-  //   // displacementMap: disMap,
-  //   // displacementScale: 1,
-  //   //     transparent: true,
-  //   //     opacity: 0.5,j
-  //   // sheen: 1,
-  // });
-
-  //   const groundMesh = new THREE.Mesh(groundGeo, groundMat);
-  // // groundMesh.rotation.x= Math.PI/2;
-
-  // return groundMesh;
-}
-
-
 function createSimple() {
-  const geometry = new THREE.PlaneBufferGeometry( 2160, 1080, 128, 128 );
+  const geometry = new THREE.PlaneBufferGeometry(2160, 1080, 128, 128);
 
   const texture = new THREE.TextureLoader().load("assets/heightmapExample.jpg");
 
   //material
-  const material = new THREE.MeshStandardMaterial( {
+  const material = new THREE.MeshStandardMaterial({
     // color: 0xffffff,
     map: texture,
     // side: THREE.DoubleSide,
@@ -243,17 +239,107 @@ function createSimple() {
     //     transparent: true,
     //     opacity: 0.5,j
     // sheen: 1,
-    // color: 0xffff00, 
+    // color: 0xffff00,
     // side: THREE.DoubleSide,
   });
 
   //plane
-  const plane = new THREE.Mesh( geometry, material );
-  plane.rotation.x= -Math.PI/2;
-  plane.rotation.z= Math.PI/2;
+  const plane = new THREE.Mesh(geometry, material);
+  plane.rotation.x = -Math.PI / 2;
+  plane.rotation.z = Math.PI / 2;
   return plane;
+}
+
+function createFantasy() {
+  const geometry = new THREE.PlaneBufferGeometry(1640, 2360, 128, 128);
+
+  const distMap = new THREE.TextureLoader().load("assets/fantasyHeight.png");
+  const texture = new THREE.TextureLoader().load("assets/fantasyMap.png");
+
+  //material
+  const material = new THREE.MeshStandardMaterial({
+    // color: 0xffffff,
+    map: texture,
+    // side: THREE.DoubleSide,
+    displacementMap: distMap,
+    displacementScale: 300,
+    //     transparent: true,
+    //     opacity: 0.5,j
+    // sheen: 1,
+    // color: 0xffff00,
+    // side: THREE.DoubleSide,
+  });
+
+  //plane
+  const plane = new THREE.Mesh(geometry, material);
+  plane.rotation.x = -Math.PI / 2;
+  plane.rotation.z = Math.PI / 2;
+  return plane;
+}
+
+function addWater() {
+
+  //Water
+  let water;
+
+  const waterGeometry = new THREE.PlaneGeometry(1640, 2360);
+
+  water = new Water(waterGeometry, {
+    textureWidth: 512,
+    textureHeight: 512,
+    waterNormals: new THREE.TextureLoader().load(
+      "assets/waternormals.jpg",
+      function (texture) {
+        texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+      }
+    ),
+    sunDirection: new THREE.Vector3(),
+    sunColor: 0xffffff,
+    waterColor: 0x001e0f,
+    distortionScale: 3.7,
+    fog: scene.fog !== undefined,
+  });
+  water.rotation.x = -Math.PI /2 ;
+  water.rotation.z = Math.PI / 2;
+  water.position.set(0, 30, 0);
+
+  // water.rotation.x = -Math.PI / 2;
+
+  return water;
 
 }
+
+// function addRiverWater() {
+
+//   //Water
+//   let water;
+
+//   const waterGeometry = new THREE.PlaneGeometry(1640, 2360);
+
+//   water = new Water(waterGeometry, {
+//     textureWidth: 512,
+//     textureHeight: 512,
+//     waterNormals: new THREE.TextureLoader().load(
+//       "textures/waternormals.jpg",
+//       function (texture) {
+//         texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+//       }
+//     ),
+//     sunDirection: new THREE.Vector3(),
+//     sunColor: 0xffffff,
+//     waterColor: 0x001e0f,
+//     distortionScale: 3.7,
+//     fog: scene.fog !== undefined,
+//   });
+//   water.rotation.x = -Math.PI /2 *1.1;
+//   water.rotation.z = Math.PI / 2;
+//   water.position.set(0, 15, 0);
+
+//   // water.rotation.x = -Math.PI / 2;
+
+//   return water;
+
+// }
 
 
 // //saturn Placeholder
